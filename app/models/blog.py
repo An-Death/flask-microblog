@@ -13,10 +13,12 @@ from app import db
 class MetaModel:
     def __repr__(self, **kwargs):
         class_name = self.__class__.__name__
-        return f'<{class_name}: {"|".join(map(":".join, kwargs.items()))}>'
+        return f'<{class_name}: {" ".join(map(":".join, kwargs.items()))}>'
 
 
-class Model(MetaModel):
+class Model(MetaModel, db.Model):
+    __abstract__ = True
+
     id = db.Column(db.Integer, primary_key=True)
 
     class Meta:
@@ -30,7 +32,7 @@ class Model(MetaModel):
         return f'"{getattr(self, self.Meta.repr_fields[0])}"'
 
 
-class User(Model, UserMixin, db.Model):
+class User(Model, UserMixin):
     username = db.Column(db.String(64), index=True, unique=True)
     email = db.Column(db.String(120), index=True, unique=True)
     password = db.Column(db.String(128))
@@ -38,6 +40,7 @@ class User(Model, UserMixin, db.Model):
 
     class Meta:
         repr_fields = ['username']
+        key_fields = ('username', 'email')
 
     def set_password(self, password):
         self.password = generate_password_hash(password)
@@ -45,8 +48,12 @@ class User(Model, UserMixin, db.Model):
     def check_password(self, password):
         return check_password_hash(self.password, password)
 
+    @staticmethod
+    def is_exist(**kwargs):
+        return User.query.filter_by(**kwargs).count()
 
-class Post(Model, db.Model):
+
+class Post(Model):
     body = db.Column(db.String(140))
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
