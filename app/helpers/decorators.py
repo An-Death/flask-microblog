@@ -1,4 +1,7 @@
 # coding: utf8
+__all__ = ['title', 'jsonify', 'jencode', 'jdecode']
+
+
 import json
 from functools import wraps
 
@@ -9,20 +12,8 @@ def title(title_name=None):
     def title(func):
         @wraps(func)
         def wraper(*args, **kwargs):
-            g = func.__globals__
-            sentinel = object()
-            oldvalue = g.get('__title__', sentinel)
             title = title_name or func.__name__
-            g['__title__'] = title
-            try:
-                res = func(*args, **kwargs)
-            finally:
-                if oldvalue is sentinel:
-                    del g['__title__']
-                else:
-                    g['__title__'] = oldvalue
-            return res
-
+            return func(__title__=title, *args, **kwargs)
         return wraper
 
     return title
