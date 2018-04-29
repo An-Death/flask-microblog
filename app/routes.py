@@ -1,10 +1,10 @@
 # coding: utf8
 
-from flask import render_template, redirect, flash, url_for
+from flask import render_template
 
 from app import app
 from app import helpers
-from app.forms.login_form import LoginForm
+from app.views import LoginView
 
 
 @app.route('/')
@@ -27,10 +27,6 @@ def home(*args, **kwargs):
 
 
 @app.route('/login', methods=['GET', 'POST'])
-@helpers.title('Login')
-def login(*args, **kwargs):
-    form = LoginForm()
-    if form.validate_on_submit():
-        flash(f'Logged by {form.username.data} remember {form.remember_me.data}')
-        return redirect(url_for('index'))
-    return render_template('login.html', __title__=kwargs['__title__'], **locals())
+def login():
+    login_view = LoginView()
+    return login_view.login()

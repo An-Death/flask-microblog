@@ -4,6 +4,9 @@ __all__ = ['User', 'Post']
 
 from datetime import datetime
 
+from flask_login import UserMixin
+from werkzeug.security import generate_password_hash, check_password_hash
+
 from app import db
 
 
@@ -27,7 +30,7 @@ class Model(MetaModel):
         return f'"{getattr(self, self.Meta.repr_fields[0])}"'
 
 
-class User(Model, db.Model):
+class User(Model, UserMixin, db.Model):
     username = db.Column(db.String(64), index=True, unique=True)
     email = db.Column(db.String(120), index=True, unique=True)
     password = db.Column(db.String(128))
@@ -35,6 +38,12 @@ class User(Model, db.Model):
 
     class Meta:
         repr_fields = ['username']
+
+    def set_password(self, password):
+        self.password = generate_password_hash(password)
+
+    def check_password(self, password):
+        return check_password_hash(self.password, password)
 
 
 class Post(Model, db.Model):
