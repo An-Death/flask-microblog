@@ -1,8 +1,9 @@
 # coding: utf8
 
 
-from flask import render_template, redirect, flash, url_for
-from flask_login import current_user, login_user
+from flask import render_template, redirect, flash, url_for, request
+from flask_login import current_user, login_user, logout_user
+from werkzeug.urls import url_parse
 
 from app.forms.login_form import LoginForm
 from app.models import User
@@ -22,6 +23,10 @@ class BaseView:
     def template(self):
         return self.Meta.template
 
+    @property
+    def default_page(self):
+        return url_for(self.Meta.default_page)
+
     def render(self, template, **kwargs):
         return render_template(template, __title__=self.__title__, **kwargs)
 
@@ -29,13 +34,14 @@ class BaseView:
         title = None
         template = None
         form = None
-
+        default_page = 'index'
 
 class LoginView(BaseView):
 
     def __init__(self):
         super().__init__()
         self.user = current_user
+        self.login_page = url_for('login')
 
     class Meta:
         title = 'Sing In'
@@ -44,14 +50,19 @@ class LoginView(BaseView):
 
     def login(self):
         if self.is_authenticated:
-            return redirect(url_for('index'))
+            return redirect(self.default_page)
         if self.form.validate_on_submit():
             try:
                 return self._process_login()
             except NameError:
-                return redirect(url_for('login'))
+                return redirect(self.login_page)
         else:
             return self._login_page()
+
+    @staticmethod
+    def logout():
+        logout_user()
+        return redirect(url_for('login'))
 
     @property
     def is_authenticated(self):
@@ -73,7 +84,15 @@ class LoginView(BaseView):
         self._check_user_exist(user, self.username)
         self._check_user_password(user, self.password)
         login_user(user, remember=self.form.remember_me.data)
-        return redirect(url_for('index'))
+        url = self._get_url()
+        return redirect(url)
+
+    def _get_url(self):
+        next_page = request.args.get('next')
+        if not next_page or url_parse(next_page).netloc != '':
+            return next_page
+        else:
+            return self.default_page
 
     @staticmethod
     def _check_user_exist(user, user_name):
