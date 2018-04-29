@@ -10,8 +10,8 @@
 </head>
 <body>
 <div>Microblog:
-    <a href="index.html">Home</a>
-    <a href="login">Login</a>
+    <a href="{{ url_for('home') }}">Home</a>
+    <a href="{{ url_for('login') }}">Login</a>
 </div>
 <hr>
 {% include 'messages.html' %}

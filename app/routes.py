@@ -1,6 +1,6 @@
 # coding: utf8
 
-from flask import render_template, redirect, flash
+from flask import render_template, redirect, flash, url_for
 
 from app import app
 from app import helpers
@@ -32,5 +32,5 @@ def login(*args, **kwargs):
     form = LoginForm()
     if form.validate_on_submit():
         flash(f'Logged by {form.username.data} remember {form.remember_me.data}')
-        return redirect('/')
+        return redirect(url_for('index'))
     return render_template('login.html', __title__=kwargs['__title__'], **locals())
