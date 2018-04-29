@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    {% if __title__ %}
+    <title>{{ __title__ }} - Microblog</title>
+    {% else %}
+    <title>Welcome to Microblog</title>
+</head>
+<body>
+<H1>Hello, {{ user.name }}</H1>
+</body>
+</html>
