@@ -12,7 +12,7 @@ def title(title_name=None):
     def title(func):
         @wraps(func)
         def wraper(*args, **kwargs):
-            title = title_name or func.__name__
+            title = title_name or func.__name__.capitalize()
             return func(__title__=title, *args, **kwargs)
         return wraper
 
