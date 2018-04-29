@@ -34,7 +34,8 @@ class BaseView:
         title = None
         template = None
         form = None
-        default_page = 'index'
+        default_page = None
+
 
 class LoginView(BaseView):
 
@@ -47,6 +48,7 @@ class LoginView(BaseView):
         title = 'Sing In'
         template = 'login.html'
         form = LoginForm
+        default_page = 'home'
 
     def login(self):
         if self.is_authenticated:

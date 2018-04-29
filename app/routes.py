@@ -13,7 +13,6 @@ from app.views import LoginView
 @login_required
 @helpers.title('Home')
 def home(*args, **kwargs):
-    user = {'username': 'Name'}
     posts = [
                 {
                     'author': {'username': 'Name'},
@@ -33,6 +32,6 @@ def login():
     return LoginView().login()
 
 
-@app.route('logout')
+@app.route('/logout')
 def logout():
     return LoginView.logout()
