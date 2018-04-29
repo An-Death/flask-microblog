@@ -16,6 +16,10 @@ def hello_world(*args, **kwargs):
                     'author': {'username': 'Name'},
                     'body': 'Some message'
 
+                },
+                {
+                    'author': {'username': 'Русский'},
+                    'body': 'Русское сообщение'
                 }
-            ] * 10
+            ] * 2
     return render_template('index.html', __title__=kwargs['__title__'], **locals())
