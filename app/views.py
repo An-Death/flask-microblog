@@ -35,9 +35,10 @@ class LoginView(BaseView):
 
     def __init__(self):
         super().__init__()
+        self.user = current_user
 
     class Meta:
-        title = 'Login'
+        title = 'Sing In'
         template = 'login.html'
         form = LoginForm
 
@@ -54,7 +55,7 @@ class LoginView(BaseView):
 
     @property
     def is_authenticated(self):
-        return current_user.is_authenticated
+        return self.user.is_authenticated
 
     @property
     def username(self):

@@ -28,5 +28,4 @@ def home(*args, **kwargs):
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    login_view = LoginView()
-    return login_view.login()
+    return LoginView().login()
