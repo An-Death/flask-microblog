@@ -3,6 +3,7 @@
 __all__ = ['User', 'Post']
 
 from datetime import datetime
+from hashlib import md5
 
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -47,6 +48,10 @@ class User(Model, UserMixin):
 
     def check_password(self, password):
         return check_password_hash(self.password, password)
+
+    def avatar(self, size):
+        digest = md5(self.email.lower().encode('utf8')).hexdigest()
+        return f'https://www.gravater.com/avatar/{digest}?d=identicon&s={size}'
 
     @staticmethod
     def is_exist(**kwargs):
