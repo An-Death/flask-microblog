@@ -14,11 +14,12 @@
     {% if current_user.is_anonimus %}
     <a href="{{ url_for('login') }}">Login</a>
     {% else %}
+        <a href={{ url_for('user', username=current_user.username) }}>Profile</a>
         <a href="{{ url_for('logout') }}">Logout</a>
     {% endif %}
 </div>
 <hr>
-{% include 'messages.html' %}
+{% include '_messages.html' %}
 {% block content %}{% endblock %}
 </body>
 </html>
