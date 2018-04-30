@@ -1,11 +1,21 @@
 # coding: utf8
+from datetime import datetime
+
 from flask import render_template, redirect, flash, url_for, request
 from flask_login import current_user, login_user, logout_user
 from werkzeug.urls import url_parse
 
-from app import db
-from app.forms.login_form import LoginForm, RegistrationForm
+from app import app, db
+from app.forms.login_forms import LoginForm, RegistrationForm
+from app.forms.profile_forms import EditProfileForm
 from app.models import User
+
+
+@app.before_request
+def before_request():
+    if current_user.is_authenticated:
+        current_user.last_seen = datetime.utcnow()
+        db.session.commit()
 
 
 class BaseView:
@@ -34,6 +44,12 @@ class BaseView:
             return url_for(self.Meta.default_page)
         else:
             return url_for('/')
+
+    def is_post(self):
+        return self.form.validate_on_submit()
+
+    def is_get(self):
+        return request.method == 'GET'
 
     def _render_own_template(self, **kwargs):
         return render_template(self.template, __title__=self.title, form=self.form, **kwargs)
@@ -82,7 +98,7 @@ class LoginView(BaseLoginView):
     def login(self):
         if self.is_authenticated:
             return redirect(self.default_page)
-        if self.form.validate_on_submit():
+        if self.is_post():
             try:
                 return self._process_login()
             except NameError:
@@ -135,7 +151,7 @@ class RegisterView(BaseLoginView):
     def register(self):
         if self.is_authenticated:
             return redirect(self.default_page)
-        if self.form.validate_on_submit():
+        if self.is_post():
             try:
                 return self._process_register()
             except NameError:
@@ -173,3 +189,33 @@ class UserView(BaseView):
         title = 'Home Page'
         template = 'user_home_page.html'
         form = None
+
+
+class EditProfileView(BaseView):
+    def __init__(self):
+        super().__init__()
+
+    @property
+    def default_page(self):
+        return url_for(self.Meta.default_page, username=current_user.username)
+
+    def edit(self):
+        if self.is_post():
+            self._save_changes()
+            return redirect(self.default_page)
+        elif self.is_get():
+            self.form.username.data = current_user.username
+            self.form.about_me.data = current_user.about_me
+        return self._render_own_template()
+
+    def _save_changes(self):
+        current_user.username = self.form.username.data
+        current_user.about_me = self.form.about_me.data
+        db.session.commit()
+        flash('Your changes have been saved.')
+
+    class Meta:
+        title = 'Edit Profile'
+        template = 'edit_profile.html'
+        form = EditProfileForm
+        default_page = 'user'

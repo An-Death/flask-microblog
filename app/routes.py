@@ -5,7 +5,7 @@ from flask_login import login_required
 
 from app import app
 from app import helpers
-from app.views import LoginView, RegisterView, UserView
+from app.views import LoginView, RegisterView, UserView, EditProfileView
 
 
 @app.route('/')
@@ -46,3 +46,9 @@ def register():
 @login_required
 def user(username):
     return UserView(username).user_home_page()
+
+
+@app.route('/edit_profile', methods=['GET', 'POST'])
+@login_required
+def edit_profile():
+    return EditProfileView().edit()
