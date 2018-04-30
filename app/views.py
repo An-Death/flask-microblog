@@ -21,9 +21,9 @@ def before_request():
 class BaseView:
 
     def __init__(self):
-        self.form = self.Meta.form() if self.Meta.form else None
         self.user = current_user
         self.__title__ = None
+        self.form = self.Meta.form() if self.Meta.form else None
 
     @property
     def title(self):
@@ -194,6 +194,7 @@ class UserView(BaseView):
 class EditProfileView(BaseView):
     def __init__(self):
         super().__init__()
+        self.form = EditProfileForm(current_user.username)
 
     @property
     def default_page(self):
@@ -217,7 +218,7 @@ class EditProfileView(BaseView):
     class Meta:
         title = 'Edit Profile'
         template = 'edit_profile.html'
-        form = EditProfileForm
+        form = None
         default_page = 'user'
 
 

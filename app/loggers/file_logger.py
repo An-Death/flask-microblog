@@ -3,8 +3,6 @@ import logging
 import os
 from logging.handlers import RotatingFileHandler
 
-from app import app
-
 DEFAULT_LOG_FILE_PATH = '~/app/logs'
 DEFAULT_LOG_FILE_NAME = 'microblog.log'
 MAX_FILE_WEIGHT = 100 * 1024 * 1024  # 100 MB
@@ -12,7 +10,7 @@ MAX_FILE_WEIGHT = 100 * 1024 * 1024  # 100 MB
 
 class FileLogger:
     def __init__(self, path=None, file_name=None, level='INFO'):
-        self.path = path or DEFAULT_LOG_FILE_PATH
+        self.path = os.path.abspath(path or DEFAULT_LOG_FILE_PATH)
         self.file_name = file_name or DEFAULT_LOG_FILE_NAME
         self._level = level
         self._check_or_create_log_file()
@@ -42,6 +40,8 @@ class FileLogger:
             os.mkdir(self.path)
 
     def _set_handler(self):
+        from app import app
+
         file_handler = RotatingFileHandler(self.log_file_path, maxBytes=MAX_FILE_WEIGHT, backupCount=10)
         file_handler.setFormatter(logging.Formatter(
             '%(asctime)s %(levelname)s: %(message)s [in %(pathame)s:%(lineno)s]'
