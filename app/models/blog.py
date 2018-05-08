@@ -40,6 +40,7 @@ followers = db.Table('followers',
 
 
 class User(Model, UserMixin):
+    id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(64), index=True, unique=True)
     email = db.Column(db.String(120), index=True, unique=True)
     password = db.Column(db.String(128))
@@ -71,6 +72,23 @@ class User(Model, UserMixin):
     @staticmethod
     def is_exist(**kwargs):
         return User.query.filter_by(**kwargs).count()
+
+    def follow(self, user):
+        if not self.is_following(user):
+            self.followed.append(user)
+
+    def unfollow(self, user):
+        if self.is_following(user):
+            self.followed.remove(user)
+
+    def is_following(self, user):
+        return self.followed.filter(followers.c.followed_id == user.id).count()
+
+    def followed_posts(self):
+        followed_posts = Post.query.join(followers, (followers.c.followed_id == Post.user_id)). \
+            filter(followers.c.follower_id == self.id)
+        own_posts = Post.query.filter_by(author=self)
+        return followed_posts.union(own_posts).order_by(Post.timestamp.desc())
 
 
 class Post(Model):

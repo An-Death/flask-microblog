@@ -3,7 +3,7 @@ import logging
 import os
 from logging.handlers import RotatingFileHandler
 
-DEFAULT_LOG_FILE_PATH = '~/app/logs'
+DEFAULT_LOG_FILE_PATH = 'app/logs'
 DEFAULT_LOG_FILE_NAME = 'microblog.log'
 MAX_FILE_WEIGHT = 100 * 1024 * 1024  # 100 MB
 

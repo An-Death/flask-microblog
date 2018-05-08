@@ -31,7 +31,8 @@ class DevConfig(BaseConfig):
 
 
 class TestConfig(BaseConfig):
-    pass
+    DEBUG = 1
+    SQLALCHEMY_AUTOFLUSH = False
 
 
 class ProdConfig(BaseConfig):
