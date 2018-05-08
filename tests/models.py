@@ -73,3 +73,20 @@ class TestUserModel(TestHelper):
         self.user.unfollow(new_user)
         self.assertNotIn(new_user, self.user.followed.all())
         self.assertNotIn(self.user, new_user.followers.all())
+
+    def test_UserModel_followed_post_must_returned_list_must_contain_post1_and_post2(self):
+        new_user = UserFactory()
+        post1 = PostFactory(author=new_user)
+        post2 = PostFactory(author=new_user)
+        self.user.followed.append(new_user)
+        user_posts = self.user.followed_posts().all()
+        self.assertIn(post1, user_posts)
+        self.assertIn(post2, user_posts)
+
+    def test_UserModel_followed_post_must_return_list_of_new_user_posts_with_own_user_posts(self):
+        new_user = UserFactory()
+        post1 = PostFactory(author=new_user)
+        post2 = PostFactory(author=new_user)
+        self.user.followed.append(new_user)
+        expected = [post2, post1, *self.user.posts.all()]
+        self.assertListEqual(expected, list(self.user.followed_posts()))
