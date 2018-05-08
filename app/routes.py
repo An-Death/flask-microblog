@@ -5,7 +5,7 @@ from flask_login import login_required
 
 from app import app
 from app import helpers
-from app.views import LoginView, RegisterView, UserView, EditProfileView
+from app.views import LoginView, RegisterView, UserView, EditProfileView, FollowView
 
 
 @app.route('/')
@@ -52,3 +52,15 @@ def user(username):
 @login_required
 def edit_profile():
     return EditProfileView().edit()
+
+
+@app.route('/follow/<username>')
+@login_required
+def follow(username):
+    return FollowView().follow(username)
+
+
+@app.route('/unfollow/<username>')
+@login_required
+def unfollow(username):
+    return FollowView().unfollow(username)

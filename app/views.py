@@ -56,7 +56,7 @@ class BaseView:
 
     def _get_url(self):
         next_page = request.args.get('next')
-        if next_page or not url_parse(next_page).netloc != '':
+        if next_page and not url_parse(next_page).netloc != '':
             return next_page
         else:
             return self.default_page
@@ -220,6 +220,52 @@ class EditProfileView(BaseView):
         template = 'edit_profile.html'
         form = None
         default_page = 'user'
+
+
+class FollowView(BaseView):
+    class Validators:
+        @staticmethod
+        def not_current_user(func):
+            def wrappy(self, username, *args, **kwargs):
+                user = self._get_user_by_username(username)
+                if user == current_user:
+                    flash(f'You cannot follow/unfollow yourself!')
+                    return redirect(url_for('user', username=username))
+
+                return func(self, username, *args, **kwargs)
+
+            return wrappy
+
+        @staticmethod
+        def is_user_exist(func):
+            def wrappy(self, username, *args, **kwargs):
+                if not self._get_user_by_username(username):
+                    flash(f'User with username: "{username}" not found!')
+                    return redirect(url_for('home'))
+
+                return func(self, username, *args, **kwargs)
+
+            return wrappy
+
+    @Validators.not_current_user
+    @Validators.is_user_exist
+    def follow(self, username: str):
+        user = self._get_user_by_username(username)
+        current_user.follow(user)
+        db.session.commit()
+        return redirect(url_for('user', username=username))
+
+    @Validators.not_current_user
+    @Validators.is_user_exist
+    def unfollow(self, username: str):
+        user = self._get_user_by_username(username)
+        current_user.unfollow(user)
+        db.session.commit()
+        return redirect(url_for('user', username=username))
+
+    @staticmethod
+    def _get_user_by_username(username):
+        return User.query.filter_by(username=username).first()
 
 
 @app.errorhandler(404)
