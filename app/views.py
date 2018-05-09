@@ -6,8 +6,10 @@ from flask_login import current_user, login_user, logout_user
 from werkzeug.urls import url_parse
 
 from app import app, db
+from app.forms.blog_forms import PostForm
 from app.forms.login_forms import LoginForm, RegistrationForm
 from app.forms.profile_forms import EditProfileForm
+from app.helpers.validators import is_user_password_valid, is_authenticated, is_not_current_user
 from app.models import User
 
 
@@ -19,7 +21,6 @@ def before_request():
 
 
 class BaseView:
-
     def __init__(self):
         self.user = current_user
         self.__title__ = None
@@ -54,7 +55,7 @@ class BaseView:
     def _render_own_template(self, **kwargs):
         return render_template(self.template, __title__=self.title, form=self.form, **kwargs)
 
-    def _get_url(self):
+    def _get_redirect_url(self):
         next_page = request.args.get('next')
         if next_page and not url_parse(next_page).netloc != '':
             return next_page
@@ -71,16 +72,33 @@ class BaseView:
 class BaseLoginView(BaseView):
 
     @property
-    def is_authenticated(self):
-        return self.user.is_authenticated
-
-    @property
     def username(self):
         return self.form.username.data
 
     @property
     def password(self):
         return self.form.password.data
+
+
+class IndexPageView(BaseView):
+    class Meta:
+        title = 'Home'
+        template = 'index.html'
+        form = PostForm
+
+    def index(self):
+        posts = [
+                    {
+                        'author': {'username': 'Name'},
+                        'body': 'Some message'
+
+                    },
+                    {
+                        'author': {'username': 'Русский'},
+                        'body': 'Русское сообщение'
+                    }
+                ] * 2
+        return self._render_own_template(posts=posts)
 
 
 class LoginView(BaseLoginView):
@@ -95,14 +113,10 @@ class LoginView(BaseLoginView):
         form = LoginForm
         default_page = 'home'
 
+    @is_authenticated
     def login(self):
-        if self.is_authenticated:
-            return redirect(self.default_page)
         if self.is_post():
-            try:
-                return self._process_login()
-            except NameError:
-                return redirect(self.page)
+            return self._process_login(self.username, self.password)
         else:
             return self._render_own_template()
 
@@ -111,25 +125,11 @@ class LoginView(BaseLoginView):
         logout_user()
         return redirect(url_for('login'))
 
-    def _process_login(self):
-        user = User.query.filter_by(username=self.username).first()
-        self._check_user_exist(user, self.username)
-        self._check_user_password(user, self.password)
+    @is_user_password_valid
+    def _process_login(self, username, password=None):
+        user = User.query.filter_by(username=username).first()
         login_user(user, remember=self.form.remember_me.data)
-        url = self._get_url()
-        return redirect(url)
-
-    @staticmethod
-    def _check_user_exist(user, user_name):
-        if not user:
-            flash(f'User with username "{user_name}" doesn`t exist')
-            raise NameError
-
-    @staticmethod
-    def _check_user_password(user, password):
-        if not user.check_password(password):
-            flash(f'Invalid password for user {user.username}')
-            raise NameError
+        return redirect(self._get_redirect_url())
 
 
 class RegisterView(BaseLoginView):
@@ -148,14 +148,10 @@ class RegisterView(BaseLoginView):
     def email(self):
         return self.form.email.data
 
+    @is_authenticated
     def register(self):
-        if self.is_authenticated:
-            return redirect(self.default_page)
         if self.is_post():
-            try:
-                return self._process_register()
-            except NameError:
-                return redirect(self.page)
+            return self._process_register()
         else:
             return self._render_own_template()
 
@@ -223,40 +219,15 @@ class EditProfileView(BaseView):
 
 
 class FollowView(BaseView):
-    class Validators:
-        @staticmethod
-        def not_current_user(func):
-            def wrappy(self, username, *args, **kwargs):
-                user = self._get_user_by_username(username)
-                if user == current_user:
-                    flash(f'You cannot follow/unfollow yourself!')
-                    return redirect(url_for('user', username=username))
 
-                return func(self, username, *args, **kwargs)
-
-            return wrappy
-
-        @staticmethod
-        def is_user_exist(func):
-            def wrappy(self, username, *args, **kwargs):
-                if not self._get_user_by_username(username):
-                    flash(f'User with username: "{username}" not found!')
-                    return redirect(url_for('home'))
-
-                return func(self, username, *args, **kwargs)
-
-            return wrappy
-
-    @Validators.not_current_user
-    @Validators.is_user_exist
+    @is_not_current_user
     def follow(self, username: str):
         user = self._get_user_by_username(username)
         current_user.follow(user)
         db.session.commit()
         return redirect(url_for('user', username=username))
 
-    @Validators.not_current_user
-    @Validators.is_user_exist
+    @is_not_current_user
     def unfollow(self, username: str):
         user = self._get_user_by_username(username)
         current_user.unfollow(user)
