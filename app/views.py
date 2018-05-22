@@ -40,7 +40,7 @@ class BaseView:
 
     @property
     def default_page(self):
-        if hasattr(self.Meta, 'default_page'):
+        if getattr(self.Meta, 'default_page'):
             return url_for(self.Meta.default_page)
         else:
             return url_for('/')
